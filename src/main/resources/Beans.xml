@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           https://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/integration
+           https://www.springframework.org/schema/integration/spring-integration.xsd http://www.springframework.org/schema/data/jpa https://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+    <jpa:repositories base-package="com.techsera.assignment.repository"/>
+    <bean id="SpringIntegrationAssignmentApplication" class="com.techsera.assignment.SpringIntegrationAssignmentApplication" init-method="setCustomer"></bean>
+    <int:gateway id="integrationGateway"
+                 service-interface="com.techsera.assignment.service.IntegrationGateway"
+                 default-request-channel="router.channel"
+               />
+
+    <int:object-to-json-transformer input-channel="router.channel.outOfStatus"
+                                    object-mapper="customObjectMapper" output-channel="router.objectToJson.channel"/>
+    <bean id="customObjectMapper" class="com.techsera.assignment.config.IntegrationConfig"
+          factory-method="getMapper"/>
+
+    <bean id="integrationService" class="com.techsera.assignment.service.IntegrationService"></bean>
+
+    <int:service-activator input-channel="router.channel" output-channel="router.channel.getObject" ref="integrationService" method="receiveMessage"/>
+    <int:service-activator input-channel="router.objectToJson.channel" ref="integrationService" method="sendCall"/>
+    <int:service-activator input-channel="router.channel.logInfo" ref="integrationService" method="logFailed"/>
+
+
+
+    <int:header-value-router input-channel="router.channel.getObject" header-name="test">
+        <int:mapping value="success" channel="router.channel.outOfStatus" />
+        <int:mapping value="fail" channel="router.channel.logInfo" />
+    </int:header-value-router>
+
+
+
+
+
+</beans>
+

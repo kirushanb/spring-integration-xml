@@ -31,31 +31,30 @@ public class IntegrationService {
     }
 
 
-    private Message<Customer> customMessage(Customer customer,String action){
-        Message<Customer> newMessage=MessageBuilder.withPayload(customer).setHeader("test",action).build();
+    private Message<Customer> customMessage(Customer customer, String action) {
+        Message<Customer> newMessage = MessageBuilder.withPayload(customer).setHeader("test", action).build();
 
         return newMessage;
     }
 
 
-    public Message<Customer> receiveMessage(Message<Customer> message) throws MessagingException{
-        Optional<Customer> customer=customerRepository.findByNameAndPassword(message.getPayload().getName(),message.getPayload().getPassword());
-        if(customer.isPresent()){
-            if(customer.get().getCustomerStatus()== CustomerStatus.ACTIVE){
-                return customMessage(customer.get(),"success");
+    public Message<Customer> receiveMessage(Message<Customer> message) throws MessagingException {
+        Optional<Customer> customer = customerRepository.findByNameAndPassword(message.getPayload().getName(), message.getPayload().getPassword());
+        if (customer.isPresent()) {
+            if (customer.get().getCustomerStatus() == CustomerStatus.ACTIVE) {
+                return customMessage(customer.get(), "success");
             }
-            return customMessage(customer.get(),"fail");
+            return customMessage(customer.get(), "fail");
         }
 
-        return customMessage(new Customer(message.getPayload().getName(),null,CustomerStatus.INACTIVE),"fail");
+        return customMessage(new Customer(message.getPayload().getName(), null, CustomerStatus.INACTIVE), "fail");
     }
-
 
 
     public void sendCall(Message<Customer> message) {
 
-        RestTemplate restTemplate=new RestTemplate();
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity(message.getPayload(), new HttpHeaders()),String.class);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity(message.getPayload(), new HttpHeaders()), String.class);
         log.info(response.toString());
     }
 
@@ -64,7 +63,6 @@ public class IntegrationService {
 
         log.info(message.getPayload().toString());
     }
-
 
 
 }
